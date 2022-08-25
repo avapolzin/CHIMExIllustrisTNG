@@ -1,2 +1,2 @@
 # CHIMExIllustrisTNG
-Store CHIME-like Illustris-TNG maps related to Polzin, Newburgh, and Natarajan (2022)
+Store mock CHIME intensity maps related to Polzin, Newburgh, and Natarajan (2022).
