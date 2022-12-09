@@ -1,5 +1,5 @@
 # CHIMExIllustrisTNG
-Intended to store code and mock catalogs and intensity maps related to Polzin, Newburgh, and Natarajan (2022).
+Intended to store code and mock catalogs and intensity maps related to Polzin, Newburgh, & Natarajan, in prep.
 
 There are 4 (pre-beam convolution) intensity maps in the maps directory of this repository:
 1. all galaxies (non-cluster galaxies and cluster galaxies)
