@@ -9,4 +9,4 @@ There are 4 (pre-beam convolution) intensity maps in the maps directory of this 
 3. mass-selected galaxy clusters
 4. radius selected galaxy clusters
 
-Additionally, there are catalogs corresponding to each of these intensity maps in the catalogs directory and code used in the creation and analysis of mock intensity maps in the analysis directory.
+Additionally, there are catalogs corresponding to each of these intensity maps in the catalogs directory and code used in the creation and analysis of mock intensity maps in the analysis directory. Ideally, this means that the code + catalogs are enough to do similar analyses without downloading tens of GBs of TNG300 group catalogs (though you will still need the [Molecular and atomic hydrogen (HI+H2) galaxy contents catalog](https://www.tng-project.org/data/docs/specifications/#sec5i) at z = 1 and 2).
