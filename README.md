@@ -1,5 +1,5 @@
 # CHIMExIllustrisTNG
-[![arXiv](https://img.shields.io/badge/arXiv-XXXX.XXXXX-b31b1b)](https://arxiv.org/abs/XXXX.XXXXX) <<-- placeholder
+<!-- [![arXiv](https://img.shields.io/badge/arXiv-XXXX.XXXXX-b31b1b)](https://arxiv.org/abs/XXXX.XXXXX) <<-- placeholder -->
 
 Intended to store code and mock catalogs and intensity maps related to Polzin, Newburgh, & Natarajan, in prep.
 
