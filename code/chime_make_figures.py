@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import albumpl
-from albumpl.cmap import RhumbLine
+from albumpl.cmap import RhumbLine, Winter05
 
 import matplotlib
 matplotlib.rcParams['font.family'] = 'serif'
@@ -18,10 +18,6 @@ matplotlib.rcParams['ytick.major.width'] = 3
 
 albumpl.set_default('RhumbLine')
 ccycle = return_colors('RhumbLine')
-
-from matplotlib.colors import LearnSegmentedColormap
-RL_map = LinearSegmentedColormap.from_list('RL_map', ['white', '#579eb2', '#31343b'])
-RL_map_r = LinearSegmentedColormap.from_list('RL_map_r', ['#31343b', '#579eb2', 'white'])
 
 #not including code for Figure 1 here, since beam model is not being shared
 
@@ -124,7 +120,7 @@ def figure2():
 	ax1.set_xlabel(r'$\Delta$ZA (deg)')
 	ax1.set_xticks([0, 64/6, 64/3, 64/2, 2*64/3, 5*64/6, 64], [-3, -2, -1, 0, 1, 2, 3])
 	# ax1.xaxis.set_minor_locator(AutoMinorLocator(2))
-	ax1.set_ylabel('Flux (Jy)')
+	ax1.set_ylabel('Flux (Jy MHz)')
 	ax1.legend(loc = 'best')
 
 	ax2.set_title('z = 1')
@@ -134,7 +130,7 @@ def figure2():
 	ax2.set_xlabel(r'$\Delta$ZA (deg)')
 	ax2.set_xticks([0, 64/6, 64/3, 64/2, 2*64/3, 5*64/6, 64], [-3, -2, -1, 0, 1, 2, 3])
 	# ax2.xaxis.set_minor_locator(AutoMinorLocator(2))
-	ax2.set_ylim([-0.06, 0.21])
+	ax4.set_ylim([-0.00006, 0.00030])
 
 	# ax3.set_title('z = 2')
 	ax3.plot(full_stack_z2[:, int(65/2 - 0.5)], lw = 4, color = ccycle[0], label = 'all galaxies')
@@ -143,7 +139,7 @@ def figure2():
 	ax3.set_xlabel(r'$\Delta$RA (deg)')
 	ax3.set_xticks([0, 68/6, 68/3, 68/2, 2*68/3, 5*68/6, 68], [-3, -2, -1, 0, 1, 2, 3])
 	# ax3.xaxis.set_minor_locator(AutoMinorLocator(2))
-	ax3.set_ylabel('Flux (Jy)')
+	ax3.set_ylabel('Flux (Jy MHz)')
 	# ax3.legend(loc = 'best')
 
 	# ax4.set_title('z = 1')
@@ -153,7 +149,7 @@ def figure2():
 	ax4.set_xlabel(r'$\Delta$RA (deg)')
 	ax4.set_xticks([0, 68/6, 68/3, 68/2, 2*68/3, 5*68/6, 68], [-3, -2, -1, 0, 1, 2, 3])
 	# ax4.xaxis.set_minor_locator(AutoMinorLocator(2))
-	ax4.set_ylim([-0.06, 0.21])
+	ax4.set_ylim([-0.00006, 0.00030])
 
 	fig.savefig('stacked_flux_galaxies_all.png', bbox_inches = 'tight', dpi = 300)
 
@@ -166,13 +162,13 @@ def figure3():
 	ax1.plot(fullcluster_stack_z2[int(69/2 - 0.5), :], lw = 4, color = ccycle[0], label = 'full map, all clusters')
 	ax1.plot(fullms_stack_z2[int(69/2 - 0.5), :], lw = 4, ls = '--', color = ccycle[1], label = 'full map, mass-selected clusters')
 	ax1.plot(ms_stack_z2[int(69/2 - 0.5), :], lw = 4, ls = ':', color = ccycle[1], label = 'mass-selected clusters')
-	ax1.plot(fullrs_stack_z2[int(69/2 - 0.5), :], lw = 4, ls = '--', color = ccycle[3], label = 'full map, radius-selected clusters')
+	ax1.plot(fullrs_stack_z2[int(69/2 - 0.5), :], lw = 4, ls = '--', color = ccycle[3], label = 'full map, radius-selected clusters', zorder = 10)
 	ax1.plot(rs_stack_z2[int(69/2 - 0.5), :], lw = 4, ls = ':', color = ccycle[3], label = 'radius-selected clusters')
 	ax1.set_xlabel(r'$\Delta$ZA (deg)')
 	ax1.set_xticks([0, 64/6, 64/3, 64/2, 2*64/3, 5*64/6, 64], [-3, -2, -1, 0, 1, 2, 3])
 	# ax1.xaxis.set_minor_locator(AutoMinorLocator(2))
-	ax1.set_ylabel('Flux (Jy)')
-	ax1.legend(loc = 'best', fontsize = 15)
+	ax1.set_ylabel('Flux (Jy MHz)')
+	ax1.legend(loc = 'upper left', fontsize = 15)
 
 	ax2.set_title('z = 1')
 	ax2.plot(fullcluster_stack_z1[int(69/2 - 0.5), :], lw = 4, color = ccycle[0])
@@ -183,7 +179,7 @@ def figure3():
 	ax2.set_xlabel(r'$\Delta$ZA (deg)')
 	ax2.set_xticks([0, 64/6, 64/3, 64/2, 2*64/3, 5*64/6, 64], [-3, -2, -1, 0, 1, 2, 3])
 	# ax2.xaxis.set_minor_locator(AutoMinorLocator(2))
-	ax2.set_ylim([-0.06, 0.22])
+	ax4.set_ylim([-0.00006, 0.00030])
 
 	# ax3.set_title('z = 2')
 	ax3.plot(fullcluster_stack_z2[:, int(65/2 - 0.5)], lw = 4, color = ccycle[0])
@@ -194,7 +190,7 @@ def figure3():
 	ax3.set_xlabel(r'$\Delta$RA (deg)')
 	ax3.set_xticks([0, 68/6, 68/3, 68/2, 2*68/3, 5*68/6, 68], [-3, -2, -1, 0, 1, 2, 3])
 	# ax3.xaxis.set_minor_locator(AutoMinorLocator(2))
-	ax3.set_ylabel('Flux (Jy)')
+	ax3.set_ylabel('Flux (Jy MHz)')
 	# ax3.legend(loc = 'best')
 
 	# ax4.set_title('z = 1')
@@ -206,6 +202,6 @@ def figure3():
 	ax4.set_xlabel(r'$\Delta$RA (deg)')
 	ax4.set_xticks([0, 68/6, 68/3, 68/2, 2*68/3, 5*68/6, 68], [-3, -2, -1, 0, 1, 2, 3])
 	# ax4.xaxis.set_minor_locator(AutoMinorLocator(2))
-	ax4.set_ylim([-0.06, 0.22])
+	ax4.set_ylim([-0.00006, 0.00030])
 
 	fig.savefig('stacked_flux_clusters_all.png', bbox_inches = 'tight', dpi = 300)

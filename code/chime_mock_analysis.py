@@ -33,14 +33,14 @@ def hi_flux(arr, mHIarr, redshift):
 
 	dL = dLbase + los
 
-	return (2.022e-8 * mHIarr * dL**-2)*freq #output in Jy
+	return 2.022e-8 * mHIarr * dL**-2 #output in Jy MHz
 
 
 def stack_to_mass(stack, redshift):
 	if redshift == 1:
 		dLbase = 6.8e3 #Mpc
 		freq = nu1 #MHz
-		a = 2.75 #pix, based on FWHM
+		a = 2.75 #pix, based on estimated FWHM
 		b = 2.25
 
 	if redshift == 2:
@@ -50,9 +50,9 @@ def stack_to_mass(stack, redshift):
 		b = 3
 
 	aper = EllipticalAperture((65/2 - 0.5, 69/2 - 0.5), a = a, b = b, theta = np.deg2rad(90))
-	flux = aperture_photometry(stack, aper)['aperture_sum']/aper.area #summed flux in Jy
+	flux = aperture_photometry(stack, aper)['aperture_sum']/aper.area #average flux in Jy MHz
 
-	return (flux * dLbase**2)/(freq * 2.022e-8) #mass in Msun
+	return 4.945e7 * flux * dLbase**2 #mass in Msun
 
 def create_condition_cat(cat, field):
 	"""
