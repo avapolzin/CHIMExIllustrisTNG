@@ -666,7 +666,7 @@ np.save('fullrs_stack_z2.npy', fullrs_stack_z2)
 mscluster_subs1 = {'x':np.array(gal_z1['x'])[np.array(gal_z1['mass_select']) == 1], 
              'y':np.array(gal_z1['y'])[np.array(gal_z1['mass_select']) == 1], 
              'z':np.array(gal_z1['z'])[np.array(gal_z1['mass_select']) == 1], 
-             'group_mHI': np.array(gal_z1['sub_mHI'])[np.array(gal_z1['mass_select']) == 1]}
+             'sub_mHI': np.array(gal_z1['sub_mHI'])[np.array(gal_z1['mass_select']) == 1]}
 
 st1 = make_subtile(mscluster_subs1['x'], mscluster_subs1['y'], mscluster_subs1['z'], mscluster_subs1['sub_mHI'], 1)
 st2 = make_subtile(reverse(mscluster_subs1['x']), mscluster_subs1['y'], mscluster_subs1['z'], mscluster_subs1['sub_mHI'], 1)
