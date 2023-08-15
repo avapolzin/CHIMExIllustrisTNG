@@ -11,6 +11,7 @@ from photutils.aperture import EllipticalAperture, aperture_photometry
 h = 0.6774
 nu1 = 714 #MHz
 nu2 = 476 #MHz
+freq_width = 0.390 #MHz
 
 cosmo = FlatLambdaCDM(H0 = 67.74, Om0 = 0.3089)
 
@@ -36,23 +37,38 @@ def hi_flux(arr, mHIarr, redshift):
 	return 2.022e-8 * mHIarr * dL**-2 #output in Jy MHz
 
 
-def stack_to_mass(stack, redshift):
-	if redshift == 1:
-		dLbase = 6.8e3 #Mpc
-		freq = nu1 #MHz
-		a = 2.75 #pix, based on estimated FWHM
-		b = 2.25
+def return_mass(out_stack, img, cat, redshift, verbose = False, nrand = 'cat'):
+	#for nrand, give an integer or 'cat'
 
-	if redshift == 2:
-		dLbase = 1.59e4 #Mpc
-		freq = nu2 #MHz
-		a = 3.75
-		b = 3
+    if redshift == 1:
+        dl = 6.95e3
+        norm = 5.3*1.45
+    if redshift == 2:
+        dl = 1.605e4
+        norm = 5.3*3.31
+        
+    freq_width = 0.390 #MHz
+    
+    if nrand == 'cat':
+        nrand = len(cat['EW']) 
+    
+    rand_cat = {'EW':np.random.uniform(np.min(cat['EW']), np.max(cat['EW']), nrand), 
+            'NS':np.random.uniform(np.min(cat['NS']), np.max(cat['NS']), nrand)}
 
-	aper = EllipticalAperture((65/2 - 0.5, 69/2 - 0.5), a = a, b = b, theta = np.deg2rad(90))
-	flux = aperture_photometry(stack, aper)['aperture_sum']/aper.area #average flux in Jy MHz
+    rand_stack = stack(img, rand_cat, verbose = False)
+    
+    norm_stack = out_stack - rand_stack
+    
+    flux = np.max(norm_stack)*freq_width
+    
+    mass = 4.945e7 * flux * dl**2/norm #mass in Msun
+    
+    if not verbose:
+        return mass
 
-	return 4.945e7 * flux * dLbase**2 #mass in Msun
+    if verbose:
+        return mass, norm_stack
+
 
 def create_condition_cat(cat, field):
 	"""
@@ -440,14 +456,25 @@ def stack(img, cat, verbose = True):
 			
 	return stack_arr/count
 
-def mean_stack_mass(img, cat, mHIarr):
+def nsamp_stack(img, cat, n, verbose = True):
+	"""
+	Takes in mock CHIME map and catalog of objects on which to stack.
 
-	EW = cat['EW'] + 34 #adding 34 and 32 pix pad explicitly (though we could skip this step
-	NS = cat['NS'] + 32 # and incorporate it later)
+	Returns mean stack on only N samples(6 deg x 6 deg).
+
+	(Strongly recommend verbose = False.)
+	"""
+
+	ind = np.random.choice(a = np.arange(len(cat['EW'])), size = n, replace = False) #generate random N indices for 
+
+	new_cat = {'EW':cat['EW'][ind], 'NS':cat['NS'][ind]}
+
+	EW = new_cat['EW'] + 34 #adding 34 and 32 pix pad explicitly (though we could skip this step
+	NS = new_cat['NS'] + 32 # and incorporate it later)
 
 	tot = len(cat['EW'])
 
-	stack_mass = 0
+	stack_arr = np.zeros((69, 65))
 	count = 0
 	for i in range(tot):
 		center = (int(EW[i]), int(NS[i]))
@@ -456,16 +483,43 @@ def mean_stack_mass(img, cat, mHIarr):
 		lower_za = center[1] - 32
 		upper_za = center[1] + 32 + 1 #add 1 explicitly for indexing
         
-		obj = mHIarr[i]
+		obj = img[lower_ra:upper_ra, lower_za:upper_za]
 		if (upper_ra > img.shape[0]) or (upper_za > img.shape[1]):
 			continue #since image has been cropped to CHIME-like pixel scale, but catalog has not
-		stack_mass += obj
+		stack_arr += obj
 		count += 1
 
 		if verbose:
 			print('completed: %i/%i'%(i+1, tot), end = '\r')
 			
-	return stack_mass/count
+	return stack_arr/count
+
+# def mean_stack_mass(img, cat, mHIarr):
+
+# 	EW = cat['EW'] + 34 #adding 34 and 32 pix pad explicitly (though we could skip this step
+# 	NS = cat['NS'] + 32 # and incorporate it later)
+
+# 	tot = len(cat['EW'])
+
+# 	stack_mass = 0
+# 	count = 0
+# 	for i in range(tot):
+# 		center = (int(EW[i]), int(NS[i]))
+# 		lower_ra = center[0] - 34
+# 		upper_ra = center[0] + 34 + 1 #add 1 explicitly for indexing
+# 		lower_za = center[1] - 32
+# 		upper_za = center[1] + 32 + 1 #add 1 explicitly for indexing
+        
+# 		obj = mHIarr[i]
+# 		if (upper_ra > img.shape[0]) or (upper_za > img.shape[1]):
+# 			continue #since image has been cropped to CHIME-like pixel scale, but catalog has not
+# 		stack_mass += obj
+# 		count += 1
+
+# 		if verbose:
+# 			print('completed: %i/%i'%(i+1, tot), end = '\r')
+			
+# 	return stack_mass/count
 
 
 ######################################################################################################

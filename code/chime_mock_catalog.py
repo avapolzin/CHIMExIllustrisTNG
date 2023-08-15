@@ -8,6 +8,7 @@ import h5py
 import matplotlib as mpl
 from astropy.cosmology import FlatLambdaCDM
 import os
+import h5py
 
 ########## For IllustrisTNG API (from https://www.tng-project.org/data/docs/api/) ###########
 import requests
@@ -183,6 +184,9 @@ def build_HI_cats(verbose = True):
     ## iterating though HI supplementary catalog for easier debugging
     z1_sub_id = [] #subhalo ids for galaxy catalog
     z2_sub_id = []
+
+    z1_subgroup_id = [] #group ids for each subhalo in galaxy catalog
+    z2_subgroup_id = []
     
     z1_sub_posx = [] #subhalo positions for galaxy catalog
     z1_sub_posy = [] #separating x,y,z for ease later
@@ -208,9 +212,6 @@ def build_HI_cats(verbose = True):
     z1_halo_id = [] #halo ids for cluster catalog
     z2_halo_id = []
     
-    z1_halo_id = [] #halo ids for cluster catalog
-    z2_halo_id = []
-    
     z1_halo_posx = [] #halo positions for cluster catalog
     z1_halo_posy = [] #separating x,y,z for ease later
     z1_halo_posz = []
@@ -220,6 +221,9 @@ def build_HI_cats(verbose = True):
     
     z1_halo_mhi = [] #total halo HI mass for cluster catalog -- uses GK11 (can be changed)
     z2_halo_mhi = []
+
+    z1_halo_r200 = [] #R200 for cluster catalog
+    z2_halo_r200 = []
     
     z1_massselect = [] #mass-selected cluster flag
     z2_massselect = []
@@ -262,6 +266,7 @@ def build_HI_cats(verbose = True):
                 id_ = int(z1_h['id_subhalo'][j])
                 
                 z1_sub_id.append(id_)
+                z1_subgroup_id.append(i_)
                 z1_sub_posx.append(subhalos_z1['SubhaloPos'][id_][0])
                 z1_sub_posy.append(subhalos_z1['SubhaloPos'][id_][1])
                 z1_sub_posz.append(subhalos_z1['SubhaloPos'][id_][2])
@@ -272,6 +277,7 @@ def build_HI_cats(verbose = True):
                 z1_sub_radiusselect.append(radiusselect1)
             
             z1_halo_mhi.append(np.sum(mhi))
+            z1_halo_r200.append(halos_z1['Group_R_Crit200'][i_])
             
             z1_massselect.append(massselect1)
             z1_radiusselect.append(radiusselect1)
@@ -281,6 +287,7 @@ def build_HI_cats(verbose = True):
                 id_ = int(z1_h['id_subhalo'][j])
                 
                 z1_sub_id.append(id_)
+                z1_subgroup_id.append(i_)
                 z1_sub_posx.append(subhalos_z1['SubhaloPos'][id_][0])
                 z1_sub_posy.append(subhalos_z1['SubhaloPos'][id_][1])
                 z1_sub_posz.append(subhalos_z1['SubhaloPos'][id_][2])
@@ -323,6 +330,7 @@ def build_HI_cats(verbose = True):
                 id_ = int(z2_h['id_subhalo'][j])
                 
                 z2_sub_id.append(id_)
+                z2_subgroup_id.append(i_)
                 z2_sub_posx.append(subhalos_z2['SubhaloPos'][id_][0])
                 z2_sub_posy.append(subhalos_z2['SubhaloPos'][id_][1])
                 z2_sub_posz.append(subhalos_z2['SubhaloPos'][id_][2])
@@ -333,6 +341,7 @@ def build_HI_cats(verbose = True):
                 z2_sub_radiusselect.append(radiusselect2)
             
             z2_halo_mhi.append(np.sum(mhi))
+            z2_halo_r200.append(halos_z2['Group_R_Crit200'][i_])
             
             z2_massselect.append(massselect2)
             z2_radiusselect.append(radiusselect2)
@@ -342,6 +351,7 @@ def build_HI_cats(verbose = True):
                 id_ = int(z2_h['id_subhalo'][j])
                 
                 z2_sub_id.append(id_)
+                z2_subgroup_id.append(i_)
                 z2_sub_posx.append(subhalos_z2['SubhaloPos'][id_][0])
                 z2_sub_posy.append(subhalos_z2['SubhaloPos'][id_][1])
                 z2_sub_posz.append(subhalos_z2['SubhaloPos'][id_][2])
@@ -352,6 +362,7 @@ def build_HI_cats(verbose = True):
                 z2_sub_radiusselect.append(0)
     
     gal_z1 = {'SubhaloID':z1_sub_id, 
+              'GroupID':z1_subgroup_id,
               'x':z1_sub_posx,
               'y':z1_sub_posy, 
               'z':z1_sub_posz, 
@@ -365,11 +376,13 @@ def build_HI_cats(verbose = True):
                   'x':z1_halo_posx, 
                   'y':z1_halo_posy, 
                   'z':z1_halo_posz, 
-                  'group_mHI':z1_halo_mhi, 
+                  'group_mHI':z1_halo_mhi,
+                  'group_R200':z1_halo_r200, 
                   'mass_select':z1_massselect, 
                   'radius_select':z1_radiusselect}
     
     gal_z2 = {'SubhaloID':z2_sub_id, 
+              'GroupID':z2_subgroup_id,
               'x':z2_sub_posx,
               'y':z2_sub_posy, 
               'z':z2_sub_posz, 
@@ -383,7 +396,8 @@ def build_HI_cats(verbose = True):
                   'x':z2_halo_posx, 
                   'y':z2_halo_posy, 
                   'z':z2_halo_posz, 
-                  'group_mHI':z2_halo_mhi, 
+                  'group_mHI':z2_halo_mhi,
+                  'group_R200':z2_halo_r200, 
                   'mass_select':z2_massselect, 
                   'radius_select':z2_radiusselect}
     
@@ -400,9 +414,9 @@ msz2_ = pd.DataFrame.from_dict(msz2)
 msz2_.to_csv('msz2.txt', sep = '\t', index = False)
 
 rz1 = np.where(halos_z1['Group_R_Crit200'] >= 750)[0] #creates initial radius-selected cluster catalogs
-rsz1 = {'GroupID': rs1, 'GroupPos': [np.array(i) for i in halos_z1['GroupPos'][rs1]], 'GroupR200':halos_z1['Group_R_Crit200'][rs1]}
+rsz1 = {'GroupID': rz1, 'GroupPos': [np.array(i) for i in halos_z1['GroupPos'][rz1]], 'GroupR200':halos_z1['Group_R_Crit200'][rz1]}
 rz2 = np.where(halos_z2['Group_R_Crit200'] >= 750)[0]
-rsz2 = {'GroupID': rs2, 'GroupPos': [np.array(i) for i in halos_z2['GroupPos'][rs2]], 'GroupR200':halos_z2['Group_R_Crit200'][rs2]}
+rsz2 = {'GroupID': rz2, 'GroupPos': [np.array(i) for i in halos_z2['GroupPos'][rz2]], 'GroupR200':halos_z2['Group_R_Crit200'][rz2]}
 
 rsz1_ = pd.DataFrame.from_dict(rsz1) #reads out to csv file (probably not strictly necessary)
 rsz1_.to_csv('rsz1.txt', sep = '\t', index = False)
