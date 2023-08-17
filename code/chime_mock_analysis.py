@@ -42,10 +42,10 @@ def return_mass(out_stack, img, cat, redshift, verbose = False, nrand = 'cat'):
 
     if redshift == 1:
         dl = 6.95e3
-        norm = 5.3*1.45
+        norm = 5.3*1.53
     if redshift == 2:
         dl = 1.605e4
-        norm = 5.3*3.31
+        norm = 5.3*3.48
         
     freq_width = 0.390 #MHz
     
@@ -396,11 +396,22 @@ def tile(subtiles, redshift):
 	return tile_img, tile_cat
 
 
-def convolve_beam(img, beam):
+def convolve_beam(img, beam, add_noise = True, sig = 0.6e-3, verbose = True):
+	"""
+	Convolve map with beam and, if add_noise, add Gaussian noise to image.
 
-	convolved_img = convolve(img, beam, mode = 'same')
+	sig: Standard deviation of noise in Jy/pixel; 
+			0.6e-3 is measured from CHIME maps (CHIME Collaboration 2023)
+	"""
 
-	return convolved_img
+    convolved_img = convolve(img, beam, mode = 'same')
+    
+    if add_noise:
+        if verbose:
+            print('adding noise')
+        convolved_img = convolved_img + np.random.normal(loc = 0, scale = sig, size = convolved_img.shape)
+
+    return convolved_img
 
 
 def make_stack_map(img, verbose = False):
@@ -493,33 +504,6 @@ def nsamp_stack(img, cat, n, verbose = True):
 			print('completed: %i/%i'%(i+1, tot), end = '\r')
 			
 	return stack_arr/count
-
-# def mean_stack_mass(img, cat, mHIarr):
-
-# 	EW = cat['EW'] + 34 #adding 34 and 32 pix pad explicitly (though we could skip this step
-# 	NS = cat['NS'] + 32 # and incorporate it later)
-
-# 	tot = len(cat['EW'])
-
-# 	stack_mass = 0
-# 	count = 0
-# 	for i in range(tot):
-# 		center = (int(EW[i]), int(NS[i]))
-# 		lower_ra = center[0] - 34
-# 		upper_ra = center[0] + 34 + 1 #add 1 explicitly for indexing
-# 		lower_za = center[1] - 32
-# 		upper_za = center[1] + 32 + 1 #add 1 explicitly for indexing
-        
-# 		obj = mHIarr[i]
-# 		if (upper_ra > img.shape[0]) or (upper_za > img.shape[1]):
-# 			continue #since image has been cropped to CHIME-like pixel scale, but catalog has not
-# 		stack_mass += obj
-# 		count += 1
-
-# 		if verbose:
-# 			print('completed: %i/%i'%(i+1, tot), end = '\r')
-			
-# 	return stack_mass/count
 
 
 ######################################################################################################
@@ -812,18 +796,158 @@ rs_stack_z2 = stack(rs_conv_pad2, rsclustercat2, verbose = False)
 np.save('rs_stack_z2.npy', rs_stack_z2)
 
 
-#try to return the mean HI mass associated with each cluster stack
-print(np.log10(stack_to_mass(ms_stack_z2, 2)), np.log10(stack_to_mass(ms_stack_z1, 1)))
-print(np.log10(stack_to_mass(ms_stack_z2 - np.median(ms_stack_z2), 2)), np.log10(stack_to_mass(ms_stack_z1 - np.median(ms_stack_z1), 1)))
-print(np.log10(stack_to_mass(fullms_stack_z2, full_stack_z2, 2)), np.log10(stack_to_mass(fullms_stack_z1 - full_stack_z1, 1)))
-print(np.log10(stack_to_mass(rs_stack_z2, 2)), np.log10(stack_to_mass(rs_stack_z1, 1)))
-print(np.log10(stack_to_mass(rs_stack_z2 - np.median(rs_stack_z2), 2)), np.log10(stack_to_mass(rs_stack_z1 - np.median(rs_stack_z1), 1)))
-print(np.log10(stack_to_mass(fullms_stack_z2, full_stack_z2, 2)), np.log10(stack_to_mass(fullms_stack_z1 - full_stack_z1, 1)))
-print(stack_to_mass(rs_stack_z2 - np.median(rs_stack_z2), 2)/stack_to_mass(ms_stack_z2 - np.median(ms_stack_z2), 2), 
-	stack_to_mass(rs_stack_z1 - np.median(rs_stack_z1), 1)/stack_to_mass(ms_stack_z1 - np.median(ms_stack_z1), 1))
+#return the accuracy of the inferred mass from the various cluster stacks
+masses_out = []
+for i in range(100): #100 iterations for effects from random background
+    ratio = (return_mass(fullcluster_stack_z2, full_conv_pad2, clustercat2, 2, nrand = 'cat'))/np.mean(np.array(cluster_z2['group_mHI']))
+    if not np.isfinite(ratio):
+        ratio = (return_mass(fullcluster_stack_z2, full_conv_pad2, clustercat2, 2, nrand = 'cat'))/np.mean(np.array(cluster_z2['group_mHI']))
+    masses_out.append(ratio)
+
+print(np.mean(masses_out), np.std(masses_out))
 
 
+masses_out = []
+for i in range(100): #100 iterations for effects from random background
+    ratio = (return_mass(fullcluster_stack_z1, full_conv_pad1, clustercat1, 1, nrand = 'cat'))/np.mean(np.array(cluster_z1['group_mHI']))
+    if not np.isfinite(ratio):
+        ratio = (return_mass(fullcluster_stack_z1, full_conv_pad1, clustercat1, 1, nrand = 'cat'))/np.mean(np.array(cluster_z1['group_mHI']))
+    masses_out.append(ratio)
+
+print(np.mean(masses_out), np.std(masses_out))
 
 
+masses_out = []
+for i in range(100): #100 iterations for effects from random background
+    ratio = (return_mass(fullms_stack_z2, full_conv_pad2, msclustercat2, 2, nrand = 'cat'))/np.mean(np.array(cluster_z2['group_mHI'])[np.array(cluster_z2['mass_select']) == 1])
+    if not np.isfinite(ratio):
+        ratio = (return_mass(fullms_stack_z2, full_conv_pad2, msclustercat2, 2, nrand = 'cat'))/np.mean(np.array(cluster_z2['group_mHI'])[np.array(cluster_z2['mass_select']) == 1])
+    masses_out.append(ratio)
 
+print(np.mean(masses_out), np.std(masses_out))
+
+
+masses_out = []
+for i in range(100): #100 iterations for effects from random background
+    ratio = (return_mass(fullms_stack_z1, full_conv_pad1, msclustercat1, 1, nrand = 'cat'))/np.mean(np.array(cluster_z1['group_mHI'])[np.array(cluster_z1['mass_select']) == 1])
+    if not np.isfinite(ratio):
+        ratio = (return_mass(fullms_stack_z1, full_conv_pad1, msclustercat1, 1, nrand = 'cat'))/np.mean(np.array(cluster_z1['group_mHI'])[np.array(cluster_z1['mass_select']) == 1])
+    masses_out.append(ratio)
+
+print(np.mean(masses_out), np.std(masses_out))
+
+
+masses_out = []
+for i in range(100): #100 iterations for effects from random background
+    ratio = (return_mass(fullrs_stack_z2, full_conv_pad2, rsclustercat2, 2, nrand = 'cat'))/np.mean(np.array(cluster_z2['group_mHI'])[np.array(cluster_z2['radius_select']) == 1])
+    if not np.isfinite(ratio):
+        ratio = (return_mass(fullrs_stack_z2, full_conv_pad2, rsclustercat2, 2, nrand = 'cat'))/np.mean(np.array(cluster_z2['group_mHI'])[np.array(cluster_z2['radius_select']) == 1])
+    masses_out.append(ratio)
+
+print(np.mean(masses_out), np.std(masses_out))
+
+
+masses_out = []
+for i in range(100): #100 iterations for effects from random background
+    ratio = (return_mass(fullrs_stack_z1, full_conv_pad1, rsclustercat1, 1, nrand = 'cat'))/np.mean(np.array(cluster_z1['group_mHI'])[np.array(cluster_z1['radius_select']) == 1])
+    if not np.isfinite(ratio):
+        ratio = (return_mass(fullrs_stack_z1, full_conv_pad1, rsclustercat1, 1, nrand = 'cat'))/np.mean(np.array(cluster_z1['group_mHI'])[np.array(cluster_z1['radius_select']) == 1])
+    masses_out.append(ratio)
+
+print(np.mean(masses_out), np.std(masses_out))
+
+
+#return the accuracy of the inferred mass from various stacks with N samples
+nsamps_all = [3000, 1000, 300, 100, 30]
+
+for nsamps in nsamps_all:
+	mass_out = []
+	for i in range(1000): #1000 iterations for effects from random background AND random catalog
+	    samp_stack, ind = nsamp_stack(full_conv_pad2, clustercat2, n = nsamps, verbose = False, return_ind = True)
+	    cond = create_condition_cat(cluster_z2, 'group_mHI')
+	    
+	    ratio = (return_mass(samp_stack, full_conv_pad2, clustercat2, 2, nrand = nsamps))/np.mean(np.array(cond)[ind])
+	    if not np.isfinite(ratio):
+	        ratio = (return_mass(samp_stack, full_conv_pad2, clustercat2, 2, nrand = nsamps))/np.mean(np.array(cond)[ind])
+	    mass_out.append(ratio)
+
+	print(np.mean(mass_out), np.std(mass_out))
+
+
+for nsamps in nsamps_all:
+	mass_out = []
+	for i in range(1000): #1000 iterations for effects from random background AND random catalog
+	    samp_stack, ind = nsamp_stack(full_conv_pad1, clustercat1, n = nsamps, verbose = False, return_ind = True)
+	    cond = create_condition_cat(cluster_z1, 'group_mHI')
+	    
+	    ratio = (return_mass(samp_stack, full_conv_pad1, clustercat1, 1, nrand = nsamps))/np.mean(np.array(cond)[ind])
+	    if not np.isfinite(ratio):
+	        ratio = (return_mass(samp_stack, full_conv_pad1, clustercat1, 1, nrand = nsamps))/np.mean(np.array(cond)[ind])
+	    mass_out.append(ratio)
+
+	print(np.mean(mass_out), np.std(mass_out))
+
+
+for nsamps in nsamps_all:
+	mass_out = []
+	for i in range(1000): #1000 iterations for effects from random background AND random catalog
+	    samp_stack, ind = nsamp_stack(full_conv_pad2, msclustercat2, n = nsamps, verbose = False, return_ind = True)
+	    cond = create_condition_cat(cluster_z2, 'group_mHI')
+	    cond2 = create_condition_cat(cluster_z2, 'mass_select')
+	    cond = np.array(cond)[cond2 == 1]
+	    
+	    ratio = (return_mass(samp_stack, full_conv_pad2, msclustercat2, 2, nrand = nsamps))/np.mean(np.array(cond)[ind])
+	    if not np.isfinite(ratio):
+	        ratio = (return_mass(samp_stack, full_conv_pad2, msclustercat2, 2, nrand = nsamps))/np.mean(np.array(cond)[ind])
+	    mass_out.append(ratio)
+
+	print(np.mean(mass_out), np.std(mass_out))
+
+
+for nsamps in nsamps_all:
+	mass_out = []
+	for i in range(1000): #1000 iterations for effects from random background AND random catalog
+	    samp_stack, ind = nsamp_stack(full_conv_pad1, msclustercat1, n = nsamps, verbose = False, return_ind = True)
+	    cond = create_condition_cat(cluster_z1, 'group_mHI')
+	    cond2 = create_condition_cat(cluster_z1, 'mass_select')
+	    cond = np.array(cond)[cond2 == 1]
+	    
+	    ratio = (return_mass(samp_stack, full_conv_pad1, msclustercat1, 1, nrand = nsamps))/np.mean(np.array(cond)[ind])
+	    if not np.isfinite(ratio):
+	        ratio = (return_mass(samp_stack, full_conv_pad1, msclustercat1, 1, nrand = nsamps))/np.mean(np.array(cond)[ind])
+	    mass_out.append(ratio)
+
+	print(np.mean(mass_out), np.std(mass_out))
+
+
+for nsamps in nsamps_all:
+	mass_out = []
+	for i in range(1000): #1000 iterations for effects from random background AND random catalog
+	    samp_stack, ind = nsamp_stack(full_conv_pad2, rsclustercat2, n = nsamps, verbose = False, return_ind = True)
+	    cond = create_condition_cat(cluster_z2, 'group_mHI')
+	    cond2 = create_condition_cat(cluster_z2, 'radius_select')
+	    cond = np.array(cond)[cond2 == 1]
+	    
+	    ratio = (return_mass(samp_stack, full_conv_pad2, rsclustercat2, 2, nrand = nsamps))/np.mean(np.array(cond)[ind])
+	    if not np.isfinite(ratio):
+	        ratio = (return_mass(samp_stack, full_conv_pad2, rsclustercat2, 2, nrand = nsamps))/np.mean(np.array(cond)[ind])
+	    mass_out.append(ratio)
+
+	print(np.mean(mass_out), np.std(mass_out))
+
+
+for nsamps in nsamps_all:
+	mass_out = []
+	for i in range(1000): #1000 iterations for effects from random background AND random catalog
+	    samp_stack, ind = nsamp_stack(full_conv_pad1, rsclustercat1, n = nsamps, verbose = False, return_ind = True)
+	    cond = create_condition_cat(cluster_z1, 'group_mHI')
+	    cond2 = create_condition_cat(cluster_z1, 'radius_select')
+	    cond = np.array(cond)[cond2 == 1]
+	    
+	    ratio = (return_mass(samp_stack, full_conv_pad1, rsclustercat1, 1, nrand = nsamps))/np.mean(np.array(cond)[ind])
+	    if not np.isfinite(ratio):
+	        ratio = (return_mass(samp_stack, full_conv_pad1, rsclustercat1, 1, nrand = nsamps))/np.mean(np.array(cond)[ind])
+	    mass_out.append(ratio)
+
+	print(np.mean(mass_out), np.std(mass_out))
 
