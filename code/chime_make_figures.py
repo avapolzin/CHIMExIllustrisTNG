@@ -22,172 +22,228 @@ matplotlib.rcParams['ytick.major.width'] = 3
 albumpl.set_default('RhumbLine')
 ccycle = return_colors('RhumbLine')
 
-#not including code for Figure 1 here, since beam model is not being shared
-#also not including Figure C1 which is a schematic produced with Keynote
+#not including code for Figure 2 here, since beam model is not being shared
+#also not including Figure A1 which is a schematic produced with Keynote
 
 #EACH FIGURE IS INDEPENDENT AND RELIES ON THE CODE IN chime_mock_analysis.py
-#EXCEPT FIGURE A1, WHICH NEEDS THREE FILES NOT INCLUDED IN REPO
-
-################################## Figure 2 ##################################
-
-def figure2():
-
-	fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize = (24, 8), gridspec_kw = {'wspace':0.01})
-
-	fhi_out = tilecat1['F_HI'][(tilecat1['EW'] < 231) & (tilecat1['NS'] < 215)]
-	ax1.hist2d(tilecat1['EW'][(tilecat1['EW'] < 231) & (tilecat1['NS'] < 215)], 
-	           tilecat1['NS'][(tilecat1['EW'] < 231) & (tilecat1['NS'] < 215)], 
-	           weights = fhi_out/np.max(fhi_out), bins = 2000, cmap = Winter05(), vmin = 0, vmax = 1)
-	ax1.set_title('TNG300')
-	ax1.axis('off')
-	ax1.set_ylabel('z = 1')
-
-	ax2.imshow(tileimg1[:231, :215]/np.max(tileimg1[:231, :215]), cmap = Winter05(), vmin = 0, vmax = 1, 
-	           aspect = 'auto', origin = 'lower')
-	ax2.set_title('binned to CHIME resolution')
-	ax2.axis('off')
-
-	ax3.imshow(full_conv1[:231, :215]/np.max(full_conv1[:231, :215]), cmap = RhumbLine('r'), vmin = -1, vmax = 1, 
-	           aspect = 'auto', origin = 'lower')
-	ax3.set_title('beam-convolved, noise added')
-	ax3.axis('off')
-
-	fig.savefig('processing_example_z1_v2.png', bbox_inches = 'tight')
-
-
+#EXCEPT FIGURE 1, WHICH NEEDS THREE FILES NOT INCLUDED IN REPO (CODE AT END)
 
 ################################## Figure 3 ##################################
 
 def figure3():
 
-	#generate random catalog
-	rand_cat = {'EW':np.random.uniform(np.min(tilecat1['EW']), np.max(tilecat1['EW']), 5*10**4), 
-	            'NS':np.random.uniform(np.min(tilecat1['NS']), np.max(tilecat1['NS']), 5*10**4)}
+	fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize = (26, 8), gridspec_kw = {'wspace':0.04}, sharey=True)
 
-	rand_stack = stack(full_conv_pad1, rand_cat, verbose = False)
+	fhi_out = tilecat1['F_HI'][(tilecat1['EW'] < 231) & (tilecat1['NS'] < 215)]
 
+	ax1.hist2d(tilecat1['EW'][(tilecat1['EW'] < 231) & (tilecat1['NS'] < 215)], 
+	           tilecat1['NS'][(tilecat1['EW'] < 231) & (tilecat1['NS'] < 215)], 
+	           weights = fhi_out/np.max(fhi_out), bins = 2000, cmap = Winter05(), vmin = 0, vmax = 0.75)
+	ax1.set_title('TNG300')
+	ax1.set_xticks(ra_inc, ra_arc)
+	ax1.set_xlabel(r'$\Delta$RA (deg)')
+	ax1.set_yticks(za_inc, za_arc)
+	ax1.set_ylabel(r'$\Delta$ZA (deg)')
 
-	fig, (ax1, ax2, ax3, ax4) = plt.subplots(1, 4, figsize = (20, 5), sharey = True, gridspec_kw = {'wspace':0.07})
+	ax2.imshow(tileimg1[:215, :231]/np.max(tileimg1[:215, :231]), cmap = Winter05(), vmin = 0, vmax = 1, 
+	           aspect = 'auto', origin = 'lower')
+	ax2.set_title('binned to CHIME resolution')
+	ax2.set_xticks(ra_inc, ra_arc)
+	ax2.set_xlabel(r'$\Delta$RA (deg)')
 
-	cbar = ax1.imshow(full_stack_z1*1000, aspect = 'equal', origin = 'lower', cmap = RhumbLine('r'), vmin = -0.3, vmax = 0.3)
-	ax1.set_xlabel('RA (deg)')
-	ax1.set_ylabel('ZA (deg)')
-	ax1.set_xticks([0, 65/2 - 0.5, 64], [-3, 0, 3])
-	ax1.set_yticks([0, 69/2 - 0.5, 68], [-3, 0, 3])
-	ax1.set_title('all galaxies\nN = 47253', fontsize = 22)
+	ax3.imshow(full_conv1[:215, :231]/np.max(full_conv1[:215, :231]), cmap = RhumbLine('r'), vmin = -0.4, vmax = 0.4, 
+	           aspect = 'auto', origin = 'lower')
+	ax3.set_title('beam-convolved, noise added')
+	ax3.set_xticks(ra_inc, ra_arc)
+	ax3.set_xlabel(r'$\Delta$RA (deg)')
 
-	ax2.imshow(nc_stack_z1*1000, aspect = 'equal', origin = 'lower', cmap = RhumbLine('r'), vmin = -0.3, vmax = 0.3)
-	ax2.set_xlabel('RA (deg)')
-	ax2.set_xticks([0, 65/2 - 0.5, 64], [-3, 0, 3])
-	ax2.set_title('field galaxies\nN = 43897', fontsize = 22)
+	left, bottom, width, height = [0.62, 0.25, 0.2, 0.2]
+	ax4 = fig.add_axes([left, bottom, width, height])
+	ax4.imshow(full_conv1[42:63, 46:68]/np.max(full_conv1[42:63, 46:68]), cmap = RhumbLine('r'), vmin = -0.4, vmax = 0.4, 
+	           origin = 'lower', aspect = 'equal')
+	ax4.add_patch(Ellipse((10.5, 21/2 - 0.5), 3, 4, facecolor = ccycle[0], edgecolor = ccycle[0]))
+	ax4.set_xticks([0, 10, 20], [1, 2, 3], fontsize = 14)
+	ax4.set_xlabel(r'$\Delta$RA (deg)', fontsize = 14)
+	ax4.set_yticks([0, 10, 20], [1, 2, 3], fontsize = 14)
+	ax4.set_ylabel(r'$\Delta$ZA (deg)', fontsize = 14)
 
-	ax3.imshow(c_stack_z1*1000, aspect = 'equal', origin = 'lower', cmap = RhumbLine('r'), vmin = -0.3, vmax = 0.3)
-	ax3.set_xlabel('RA (deg)')
-	ax3.set_xticks([0, 65/2 - 0.5, 64], [-3, 0, 3])
-	ax3.set_title('cluster galaxies\nN = 3356', fontsize = 22)
+	fig.savefig('processing_example_z1_v2.png', bbox_inches = 'tight')
 
-	ax4.imshow(rand_stack*1000, aspect = 'equal', origin = 'lower', cmap = RhumbLine('r'), vmin = -0.3, vmax = 0.3)
-	ax4.set_xlabel('RA (deg)')
-	ax4.set_xticks([0, 65/2 - 0.5, 64], [-3, 0, 3])
-	ax4.set_title('random positions\nN = 50000', fontsize = 22)
-
-
-	plt.colorbar(cbar, ax = [ax1, ax2, ax3, ax4], label = 'Average Flux (mJy)', pad = 0.01)
-
-	fig.savefig('stack_example_z1.png', bbox_inches = 'tight')
 
 
 ################################## Figure 4 ##################################
 
 def figure4():
 
-	fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize = (20, 14), sharey = 'row', gridspec_kw = {'wspace':0.05})
+	rand_cat = {'EW':np.random.uniform(np.min(tilecat1['EW']), np.max(tilecat1['EW']), 2*10**7), 
+	            'NS':np.random.uniform(np.min(tilecat1['NS']), np.max(tilecat1['NS']), 2*10**7)}
 
-	ax1.set_title('z = 2')
-	ax1.plot(full_stack_z2[int(69/2 - 0.5), :]*1000, lw = 4, color = ccycle[0], label = 'all galaxies')
-	ax1.plot(nc_stack_z2[int(69/2 - 0.5), :]*1000, lw = 4, ls = '--', color = ccycle[1], label = 'field galaxies')
-	ax1.plot(c_stack_z2[int(69/2 - 0.5), :]*1000, lw = 4, ls = '--', color = ccycle[3], label = 'cluster galaxies')
-	ax1.set_xlabel(r'$\Delta$ZA (deg)')
-	ax1.set_xticks([0, 64/6, 64/3, 64/2, 2*64/3, 5*64/6, 64], [-3, -2, -1, 0, 1, 2, 3])
-	ax1.set_ylabel('Flux (mJy)')
-	ax1.legend(loc = 'best')
+	rand_stack = stack(full_conv_pad1, rand_cat, verbose = False)
 
-	ax2.set_title('z = 1')
-	ax2.plot(full_stack_z1[int(69/2 - 0.5), :]*1000, lw = 4, color = ccycle[0])
-	ax2.plot(nc_stack_z1[int(69/2 - 0.5), :]*1000, lw = 4, ls = '--', color = ccycle[1])
-	ax2.plot(c_stack_z1[int(69/2 - 0.5), :]*1000, lw = 4, ls = '--', color = ccycle[3])
-	ax2.set_xlabel(r'$\Delta$ZA (deg)')
-	ax2.set_xticks([0, 64/6, 64/3, 64/2, 2*64/3, 5*64/6, 64], [-3, -2, -1, 0, 1, 2, 3])
-	ax2.set_ylim([-0.18, 0.9])
 
-	ax3.plot(full_stack_z2[:, int(65/2 - 0.5)]*1000, lw = 4, color = ccycle[0], label = 'all galaxies')
-	ax3.plot(nc_stack_z2[:, int(65/2 - 0.5)]*1000, lw = 4, ls = '--', color = ccycle[1], label = 'field galaxies')
-	ax3.plot(c_stack_z2[:, int(65/2 - 0.5)]*1000, lw = 4, ls = '--', color = ccycle[3], label = 'cluster galaxies')
-	ax3.set_xlabel(r'$\Delta$RA (deg)')
-	ax3.set_xticks([0, 68/6, 68/3, 68/2, 2*68/3, 5*68/6, 68], [-3, -2, -1, 0, 1, 2, 3])
-	ax3.set_ylabel('Flux (mJy)')
+	fig, ((ax1, ax2, ax3, ax4),
+	     (ax5, ax6, ax7, ax8)) = plt.subplots(2, 4, figsize = (20, 10), sharey = True, gridspec_kw = {'wspace':0.07})
 
-	ax4.plot(full_stack_z1[:, int(65/2 - 0.5)]*1000, lw = 4, color = ccycle[0])
-	ax4.plot(nc_stack_z1[:, int(65/2 - 0.5)]*1000, lw = 4, ls = '--', color = ccycle[1])
-	ax4.plot(c_stack_z1[:, int(65/2 - 0.5)]*1000, lw = 4, ls = '--', color = ccycle[3])
-	ax4.set_xlabel(r'$\Delta$RA (deg)')
-	ax4.set_xticks([0, 68/6, 68/3, 68/2, 2*68/3, 5*68/6, 68], [-3, -2, -1, 0, 1, 2, 3])
-	ax4.set_ylim([-0.18, 0.90])
+	cbar = ax1.imshow(full_stack_z1*1e6, aspect = 'equal', origin = 'lower', cmap = RhumbLine('r'), vmin = -0.3/20*1500, vmax = 0.3/20*1500)
+	ax1.set_ylabel('ZA (deg)')
+	ax1.set_xticks([0, 65/2 - 0.5, 64], [-3, 0, 3])
+	ax1.set_yticks([0, 69/2 - 0.5, 68], [-3, 0, 3])
+	ax1.set_title('all galaxies\nlog N = 7.26', fontsize = 22)
 
-	fig.savefig('stacked_flux_galaxies_all.png', bbox_inches = 'tight', dpi = 300)
+	ax2.imshow(nc_stack_z1*1e6, aspect = 'equal', origin = 'lower', cmap = RhumbLine('r'), vmin = -0.3/20*1500, vmax = 0.3/20*1500)
+	ax2.set_xticks([0, 65/2 - 0.5, 64], [-3, 0, 3])
+	ax2.set_title('field galaxies\nlog N = 7.23', fontsize = 22)
+
+	ax3.imshow(c_stack_z1*1e6, aspect = 'equal', origin = 'lower', cmap = RhumbLine('r'), vmin = -0.3/20*1500, vmax = 0.3/20*1500)
+	ax3.set_xticks([0, 65/2 - 0.5, 64], [-3, 0, 3])
+	ax3.set_title('cluster galaxies\nlog N = 6.11', fontsize = 22)
+
+	ax4.imshow(rand_stack*1e6, aspect = 'equal', origin = 'lower', cmap = RhumbLine('r'), vmin = -0.3/20*1500, vmax = 0.3/20*1500)
+	ax4.set_xticks([0, 65/2 - 0.5, 64], [-3, 0, 3])
+	ax4.set_title('random positions\nlog N = 7.30', fontsize = 22)
+
+
+	rand_cat = {'EW':np.random.uniform(np.min(tilecat1['EW']), np.max(tilecat1['EW']), 5*10**4), 
+	            'NS':np.random.uniform(np.min(tilecat1['NS']), np.max(tilecat1['NS']), 5*10**4)}
+
+	rand_stack = stack(full_conv_pad1, rand_cat, verbose = False)
+
+	ax5.imshow(full_stack_z1_40k*1e6, aspect = 'equal', origin = 'lower', cmap = RhumbLine('r'), vmin = -0.3/20*1500, vmax = 0.3/20*1500)
+	ax5.set_xlabel('RA (deg)')
+	ax5.set_ylabel('ZA (deg)')
+	ax5.set_xticks([0, 65/2 - 0.5, 64], [-3, 0, 3])
+	ax5.set_yticks([0, 69/2 - 0.5, 68], [-3, 0, 3])
+	ax5.set_title('log N = 4.67', fontsize = 22)
+
+	ax6.imshow(nc_stack_z1_40k*1e6, aspect = 'equal', origin = 'lower', cmap = RhumbLine('r'), vmin = -0.3/20*1500, vmax = 0.3/20*1500)
+	ax6.set_xlabel('RA (deg)')
+	ax6.set_xticks([0, 65/2 - 0.5, 64], [-3, 0, 3])
+	ax6.set_title('log N = 4.64', fontsize = 22)
+
+	ax7.imshow(c_stack_z1_40k*1e6, aspect = 'equal', origin = 'lower', cmap = RhumbLine('r'), vmin = -0.3/20*1500, vmax = 0.3/20*1500)
+	ax7.set_xlabel('RA (deg)')
+	ax7.set_xticks([0, 65/2 - 0.5, 64], [-3, 0, 3])
+	ax7.set_title('log N = 3.53', fontsize = 22)
+
+	ax8.imshow(rand_stack*1e6, aspect = 'equal', origin = 'lower', cmap = RhumbLine('r'), vmin = -0.3/20*1500, vmax = 0.3/20*1500)
+	ax8.set_xlabel('RA (deg)')
+	ax8.set_xticks([0, 65/2 - 0.5, 64], [-3, 0, 3])
+	ax8.set_title('log N = 4.70', fontsize = 22)
+
+	plt.colorbar(cbar, ax = [ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8], label = r'Average Flux ($\mu$Jy)', pad = 0.01) 
+
+	fig.savefig('stack_example_z1.png', bbox_inches = 'tight')
 
 
 ################################## Figure 5 ##################################
 
 def figure5():
 
+	#stack on number of galaxies consistent with existing CHIME results
+	mstar = create_condition_cat(gal_z1, 'sub_mstar')
+	crop_cat = {'EW':tilecat1['EW'][mstar >= 1e10], 'NS':tilecat1['NS'][mstar >= 1e10]}
+	full_stack_z1_40k = nsamp_stack(full_conv_pad1, crop_cat, 47253, verbose = False, return_ind = False)
+
+
 	fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize = (20, 14), sharey = 'row', gridspec_kw = {'wspace':0.05})
 
 	ax1.set_title('z = 2')
-	ax1.plot(fullcluster_stack_z2[int(69/2 - 0.5), :]*1000, lw = 4, color = ccycle[0], label = 'full map, all clusters')
-	ax1.plot(fullms_stack_z2[int(69/2 - 0.5), :]*1000, lw = 4, ls = '--', color = ccycle[1], label = 'full map, mass-selected clusters')
-	ax1.plot(ms_stack_z2[int(69/2 - 0.5), :]*1000, lw = 4, ls = ':', color = ccycle[1], label = 'mass-selected clusters')
-	ax1.plot(fullrs_stack_z2[int(69/2 - 0.5), :]*1000, lw = 4, ls = '--', color = ccycle[3], label = 'full map, radius-selected clusters', zorder = 10)
-	ax1.plot(rs_stack_z2[int(69/2 - 0.5), :]*1000, lw = 4, ls = ':', color = ccycle[3], label = 'radius-selected clusters')
-	ax1.set_xlabel(r'$\Delta$ZA (deg)')
+	ax1.plot(full_stack_z2[int(69/2 - 0.5), :]*1e6, lw = 4, color = ccycle[0], label = 'all galaxies')
+	ax1.plot(nc_stack_z2[int(69/2 - 0.5), :]*1e6, lw = 4, ls = '--', color = ccycle[1], label = 'field galaxies')
+	ax1.plot(c_stack_z2[int(69/2 - 0.5), :]*1e6, lw = 4, ls = '--', color = ccycle[3], label = 'cluster galaxies')
+	ax1.plot(fullcluster_stack_z2[int(69/2 - 0.5), :]*1e6, lw = 4, color = '#8f8c7b', ls = ':', label = 'all clusters')
+	ax1.set_xlabel(r'$\Delta$RA (deg)')
 	ax1.set_xticks([0, 64/6, 64/3, 64/2, 2*64/3, 5*64/6, 64], [-3, -2, -1, 0, 1, 2, 3])
-	ax1.set_ylabel('Flux (mJy)')
-	ax1.legend(loc = 'upper left', fontsize = 15)
+	ax1.set_ylabel(r'Flux ($\mu$Jy)')
+	ax1.legend(loc = 'upper left', frameon = False)
 
 	ax2.set_title('z = 1')
-	ax2.plot(fullcluster_stack_z1[int(69/2 - 0.5), :]*1000, lw = 4, color = ccycle[0])
-	ax2.plot(fullms_stack_z1[int(69/2 - 0.5), :]*1000, lw = 4, ls = '--', color = ccycle[1])
-	ax2.plot(ms_stack_z1[int(69/2 - 0.5), :]*1000, lw = 4, ls = ':', color = ccycle[1])
-	ax2.plot(fullrs_stack_z1[int(69/2 - 0.5), :]*1000, lw = 4, ls = '--', color = ccycle[3])
-	ax2.plot(rs_stack_z1[int(69/2 - 0.5), :]*1000, lw = 4, ls = ':', color = ccycle[3])
+	ax2.plot(full_stack_z1_40k[int(69/2 - 0.5), :]*1e6, lw = 2, color = ccycle[0], alpha = 0.5, label = r'all galaxies, log N = 4.67')
+	ax2.plot(full_stack_z1[int(69/2 - 0.5), :]*1e6, lw = 4, color = ccycle[0])
+	ax2.plot(nc_stack_z1[int(69/2 - 0.5), :]*1e6, lw = 4, ls = '--', color = ccycle[1])
+	ax2.plot(c_stack_z1[int(69/2 - 0.5), :]*1e6, lw = 4, ls = '--', color = ccycle[3])
+	ax2.plot(fullcluster_stack_z1[int(69/2 - 0.5), :]*1e6, lw = 4, color = '#8f8c7b', ls = ':')
+	ax2.set_xlabel(r'$\Delta$RA (deg)')
 	ax2.set_xticks([0, 64/6, 64/3, 64/2, 2*64/3, 5*64/6, 64], [-3, -2, -1, 0, 1, 2, 3])
-	ax2.set_xlabel(r'$\Delta$ZA (deg)')
-	ax2.set_ylim([-0.18, 0.9])
+	ax2.set_ylim([-18, 140])
+	ax2.legend(loc = 'upper right', frameon = False)
 
-	ax3.plot(fullcluster_stack_z2[:, int(65/2 - 0.5)]*1000, lw = 4, color = ccycle[0])
-	ax3.plot(fullms_stack_z2[:, int(65/2 - 0.5)]*1000, lw = 4, ls = '--', color = ccycle[1])
-	ax3.plot(ms_stack_z2[:, int(65/2 - 0.5)]*1000, lw = 4, ls = ':', color = ccycle[1])
-	ax3.plot(fullrs_stack_z2[:, int(65/2 - 0.5)]*1000, lw = 4, ls = '--', color = ccycle[3])
-	ax3.plot(rs_stack_z2[:, int(65/2 - 0.5)]*1000, lw = 4, ls = ':', color = ccycle[3])
-	ax3.set_xlabel(r'$\Delta$RA (deg)')
+	ax3.plot(full_stack_z2[:, int(65/2 - 0.5)]*1e6, lw = 4, color = ccycle[0], label = 'all galaxies')
+	ax3.plot(nc_stack_z2[:, int(65/2 - 0.5)]*1e6, lw = 4, ls = '--', color = ccycle[1], label = 'field galaxies')
+	ax3.plot(c_stack_z2[:, int(65/2 - 0.5)]*1e6, lw = 4, ls = '--', color = ccycle[3], label = 'cluster galaxies')
+	ax3.plot(fullcluster_stack_z2[:, int(65/2 - 0.5)]*1e6, lw = 4, color = '#8f8c7b', ls = ':')
+	ax3.set_xlabel(r'$\Delta$ZA (deg)')
 	ax3.set_xticks([0, 68/6, 68/3, 68/2, 2*68/3, 5*68/6, 68], [-3, -2, -1, 0, 1, 2, 3])
-	ax3.set_ylabel('Flux (mJy)')
+	ax3.set_ylabel(r'Flux ($\mu$Jy)')
 
-	ax4.plot(fullcluster_stack_z1[:, int(65/2 - 0.5)]*1000, lw = 4, color = ccycle[0])
-	ax4.plot(fullms_stack_z1[:, int(65/2 - 0.5)]*1000, lw = 4, ls = '--', color = ccycle[1])
-	ax4.plot(ms_stack_z1[:, int(65/2 - 0.5)]*1000, lw = 4, ls = ':', color = ccycle[1])
-	ax4.plot(fullrs_stack_z1[:, int(65/2 - 0.5)]*1000, lw = 4, ls = '--', color = ccycle[3])
-	ax4.plot(rs_stack_z1[:, int(65/2 - 0.5)]*1000, lw = 4, ls = ':', color = ccycle[3])
-	ax4.set_xlabel(r'$\Delta$RA (deg)')
+	ax4.plot(full_stack_z1_40k[:, int(65/2 - 0.5)]*1e6, lw = 2, color = ccycle[0], alpha = 0.5)
+	ax4.plot(full_stack_z1[:, int(65/2 - 0.5)]*1e6, lw = 4, color = ccycle[0])
+	ax4.plot(nc_stack_z1[:, int(65/2 - 0.5)]*1e6, lw = 4, ls = '--', color = ccycle[1])
+	ax4.plot(c_stack_z1[:, int(65/2 - 0.5)]*1e6, lw = 4, ls = '--', color = ccycle[3])
+	ax4.plot(fullcluster_stack_z1[:, int(65/2 - 0.5)]*1e6, lw = 4, color = '#8f8c7b', ls = ':')
+	ax4.set_xlabel(r'$\Delta$ZA (deg)')
 	ax4.set_xticks([0, 68/6, 68/3, 68/2, 2*68/3, 5*68/6, 68], [-3, -2, -1, 0, 1, 2, 3])
-	ax4.set_ylim([-0.18, 0.9])
+	ax4.set_ylim([-18, 140])
 
-	fig.savefig('stacked_flux_clusters_all.png', bbox_inches = 'tight', dpi = 300)
+	fig.savefig('stacked_flux_galaxies_all.png', bbox_inches = 'tight', dpi = 300)
 
 
 ################################## Figure 6 ##################################
 
 def figure6():
+
+	#generate stacks for a realistic number of randomly selected clusters
+	fullcluster_stack_z2_300 = nsamp_stack(full_conv_pad2, clustercat2, n = 300, verbose = False, return_ind = False)
+	fullcluster_stack_z1_3000 = nsamp_stack(full_conv_pad1, clustercat1, n = 3000, verbose = False, return_ind = False)
+
+	fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize = (20, 14), sharey = 'row', gridspec_kw = {'wspace':0.05})
+
+	ax1.set_title('z = 2')
+	ax1.plot(fullcluster_stack_z2_300[int(69/2 - 0.5), :]*1e6, lw = 2, color = ccycle[0], alpha = 0.5, label = 'all clusters,\nlog N  = 2.5')
+	ax1.plot(fullcluster_stack_z2[int(69/2 - 0.5), :]*1e6, lw = 4, color = ccycle[0])
+	ax1.plot(fullms_stack_z2[int(69/2 - 0.5), :]*1e6, lw = 4, ls = '--', color = ccycle[1])
+	ax1.plot(fullrs_stack_z2[int(69/2 - 0.5), :]*1e6, lw = 4, ls = '--', color = ccycle[3])
+	ax1.set_xlabel(r'$\Delta$RA (deg)')
+	ax1.set_xticks([0, 64/6, 64/3, 64/2, 2*64/3, 5*64/6, 64], [-3, -2, -1, 0, 1, 2, 3])
+	ax1.set_ylabel(r'Flux ($\mu$Jy)')
+	ax1.legend(loc = 'upper left', fontsize = 17, frameon = False)
+
+	ax2.set_title('z = 1')
+	ax2.plot(fullcluster_stack_z1_3000[int(69/2 - 0.5), :]*1e6, lw = 2, color = ccycle[0], alpha = 0.5)
+	ax2.plot(fullcluster_stack_z1[int(69/2 - 0.5), :]*1e6, lw = 4, color = ccycle[0], label = 'all clusters')
+	ax2.plot(fullms_stack_z1[int(69/2 - 0.5), :]*1e6, lw = 4, ls = '--', color = ccycle[1], label = 'mass-selected clusters')
+	ax2.plot(fullrs_stack_z1[int(69/2 - 0.5), :]*1e6, lw = 4, ls = '--', color = ccycle[3], label = 'radius-selected clusters')
+	ax2.set_xticks([0, 64/6, 64/3, 64/2, 2*64/3, 5*64/6, 64], [-3, -2, -1, 0, 1, 2, 3])
+	ax2.set_ylim([-18, 140])
+	ax2.set_xlabel(r'$\Delta$RA (deg)')
+
+	leg_ = mlines.Line2D([], [], color = ccycle[0], alpha = 0.5, lw = 2, label = 'all clusters,\nlog N = 3.5')
+	leg2 = ax2.legend([leg_], ['all clusters,\nlog N = 3.5'], loc = 'upper left', frameon = False, fontsize = 17)
+	ax2.legend(loc = 'upper right', frameon = False, fontsize = 17)
+	ax2.add_artist(leg2)
+
+	ax3.plot(fullcluster_stack_z2_300[:, int(65/2 - 0.5)]*1e6, lw = 2, color = ccycle[0], alpha = 0.5)
+	ax3.plot(fullcluster_stack_z2[:, int(65/2 - 0.5)]*1e6, lw = 4, color = ccycle[0])
+	ax3.plot(fullms_stack_z2[:, int(65/2 - 0.5)]*1e6, lw = 4, ls = '--', color = ccycle[1])
+	ax3.plot(fullrs_stack_z2[:, int(65/2 - 0.5)]*1e6, lw = 4, ls = '--', color = ccycle[3])
+	ax3.set_xlabel(r'$\Delta$ZA (deg)')
+	ax3.set_xticks([0, 68/6, 68/3, 68/2, 2*68/3, 5*68/6, 68], [-3, -2, -1, 0, 1, 2, 3])
+	ax3.set_ylabel(r'Flux ($\mu$Jy)')
+
+	ax4.plot(fullcluster_stack_z1_3000[:, int(65/2 - 0.5)]*1e6, lw = 2, color = ccycle[0], alpha = 0.5)
+	ax4.plot(fullcluster_stack_z1[:, int(65/2 - 0.5)]*1e6, lw = 4, color = ccycle[0])
+	ax4.plot(fullms_stack_z1[:, int(65/2 - 0.5)]*1e6, lw = 4, ls = '--', color = ccycle[1])
+	ax4.plot(fullrs_stack_z1[:, int(65/2 - 0.5)]*1e6, lw = 4, ls = '--', color = ccycle[3])
+	ax4.set_xlabel(r'$\Delta$ZA (deg)')
+	ax4.set_xticks([0, 68/6, 68/3, 68/2, 2*68/3, 5*68/6, 68], [-3, -2, -1, 0, 1, 2, 3])
+	ax4.set_ylim([-18, 140])
+
+	fig.savefig('stacked_flux_clusters_all.png', bbox_inches = 'tight', dpi = 300)
+
+
+################################## Figure 7 ##################################
+
+def figure7():
 
 	fig, ax = plt.subplots(1, 1, figsize = (9, 7))
 
@@ -249,9 +305,9 @@ def figure6():
 	fig.savefig('compare_HI_galaxies_v2.pdf', bbox_inches = 'tight', dpi = 300)
 
 
-################################## Figure 7 ##################################
+################################## Figure 8 ##################################
 
-def figure7():
+def figure8():
 
 	fig, ax = plt.subplots(1, 1, figsize = (9, 7))
 
@@ -310,9 +366,9 @@ def figure7():
 
 
 
-################################## Figure 8 ##################################
+################################## Figure 9 ##################################
 
-def figure8():
+def figure9():
 
 	### Generate values for plotting ###
 

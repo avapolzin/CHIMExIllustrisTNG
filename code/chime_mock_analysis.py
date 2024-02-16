@@ -1010,8 +1010,76 @@ for nsamps in nsamps_all:
 
 
 ######################################################################################################
-## ancillary code -- used to enable other analysis by computing fnt from noiseless stacks
+## ancillary code -- used to enable other analysis, includes 
+## 	(1) measuring new beam FWHM and (2) computing fnt from noiseless stacks
 ## only re-run if required for alternative cluster-selection or beam
+
+#compute beam FWHM (redshift-dependent, and, depending on beam, direction-dependent)
+def single_gauss_0_fwhm(x, sigma, n):
+    return n*np.exp(-0.5*((x - 32)/sigma)**2)
+
+def single_gauss_1_fwhm(x, sigma, n):
+    return n*np.exp(-0.5*((x - 34)/sigma)**2)
+
+
+def return_fwhm(out_stack, img, cat, redshift, verbose = False, nrand = 'cat'):
+	#for nrand, give an integer or 'cat', 'cat' uses length of catalog
+
+	if nrand == 'cat':
+		nrand = len(cat['EW'])
+
+	rand_cat = {'EW':np.random.uniform(np.min(cat['EW']), np.max(cat['EW']), nrand), 
+			'NS':np.random.uniform(np.min(cat['NS']), np.max(cat['NS']), nrand)}
+
+	rand_stack = stack(img, rand_cat, verbose = False)
+
+	norm_stack = out_stack - rand_stack
+
+	sig_0, n_0, pcov = curve_fit(single_gauss_0_fwhm, np.arange(norm_stack.shape[1]), norm_stack[34, :])    
+	sig_1, n_1, pcov = curve_fit(single_gauss_1_fwhm, np.arange(norm_stack.shape[0]), norm_stack[:, 32])
+
+	if not verbose:
+		return sig_0, sig_1
+
+	if verbose:
+		print(fpk, mass)
+		fig = plt.figure()
+		plt.plot(np.arange(norm_stack.shape[1]), norm_stack[34, :], 
+				color = '#579eb2', alpha = 0.5)
+		plt.plot(np.arange(norm_stack.shape[1]), single_gauss_0(np.arange(norm_stack.shape[1]), n_0), 
+				color = '#579eb2', ls = '--', alpha = 0.5)
+		plt.plot(np.arange(norm_stack.shape[0]), norm_stack[:, 32], 
+				color = '#e7a834', alpha = 0.5)
+		plt.plot(np.arange(norm_stack.shape[0]), single_gauss_1(np.arange(norm_stack.shape[0]), n_1), 
+				color = '#e7a834', ls = '--', alpha = 0.5)
+		plt.axhline(fpk, color = '#8f8c7b', ls = '--', alpha = 0.8) 
+		plt.show()
+		plt.close()
+		return sig_0, sig_1
+
+#redshift 2 FWHM
+sig_0_, sig_1_ = [], []
+for i in range(1000):
+	print(i, end = '\r')
+	sig_0, sig_1 = return_fwhm(fullcluster_stack_z2, full_conv_pad2, clustercat2, 2, nrand = 'cat', verbose = False)
+	sig_0_.append(sig_0)
+	sig_1_.append(sig_1)
+print(np.mean(sig_0_), np.std(sig_0_)) 
+print(np.mean(sig_1_), np.std(sig_1_)) 
+
+#redshift 1 FWHM
+sig_0_, sig_1_ = [], []
+for i in range(1000):
+	print(i, end = '\r')
+	sig_0, sig_1 = return_fwhm(fullcluster_stack_z1, full_conv_pad1, clustercat1, 1, nrand = 'cat', verbose = False)
+	sig_0_.append(sig_0)
+	sig_1_.append(sig_1)
+print(np.mean(sig_0_), np.std(sig_0_)) 
+print(np.mean(sig_1_), np.std(sig_1_))
+
+
+######################################
+
 
 #generate noisless maps + stacks
 full_conv1_noiseless = convolve_beam(tileimg1, beam1, add_noise = False) #convolve tiled image with beam
@@ -1047,7 +1115,6 @@ def norm_stack(out_stack, img, cat, redshift, verbose = False, nrand = 1000):
 
     dl = cosmo.luminosity_distance(redshift).to(u.Mpc).value
         
-    freq_width = 0.390 #MHz
     bandwidth = get_bandwidth(redshift)*freq_width
     
     if nrand == 'cat':
