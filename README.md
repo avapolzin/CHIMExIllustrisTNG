@@ -3,12 +3,18 @@
 
 Intended to store code and mock catalogs and intensity maps related to Polzin et al., in prep.
 
-There are 3 (pre-beam convolution) intensity maps at each of z = 1 and 2 in the maps directory of this repository:
+There are 3 (pre-beam convolution, beam-convolved, and beam-convolved + padded) intensity maps at each of z = 1 and 2 in the maps directory of this repository:
 1. all galaxies (field galaxies and cluster galaxies)
 2. mass-selected galaxy clusters
 3. radius selected galaxy clusters
 
-Additionally, there are pre-permutation catalogs corresponding to each of these intensity maps in the catalogs directory and code used in the creation and analysis of mock intensity maps and in the permutation of the volume/catalogs in the analysis directory. Ideally, this means that the code + catalogs are enough to do similar analyses without downloading tens of GBs of TNG300 group catalogs (though you will still need to download the [Molecular and atomic hydrogen (HI+H2) galaxy contents catalog](https://www.tng-project.org/data/docs/specifications/#sec5i) at z = 1 and 2, which are a total of ~4 GB).
+These maps, and the beams, are saved as .npy files, which can be read in the following way:
+```python
+import numpy as np
+filename = np.load('filename.npy')
+```
+
+Additionally, there are pre-permutation catalogs corresponding to each of these intensity maps in the catalogs directory and code used in the creation and analysis of mock intensity maps and in the permutation of the volume/catalogs in the analysis directory. Ideally, this means that the code + catalogs are enough to do similar analyses without downloading tens of GBs of TNG300 group catalogs (though you will still need to download the [Molecular and atomic hydrogen (HI+H2) galaxy contents catalog](https://www.tng-project.org/data/docs/specifications/#sec5i) at z = 1 and 2, which are a total of \~4 GB).
 
 We offer a guide to what changes should be made to the code for different use cases.
 

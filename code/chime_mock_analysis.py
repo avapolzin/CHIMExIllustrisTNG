@@ -11,20 +11,22 @@ from photutils.aperture import EllipticalAperture, aperture_photometry
 h = 0.6774
 hi = 1420.405761768 #MHz
 freq_width = 0.390 #MHz
-fnt = 6.4
+fnt = 6.4 #fraction of flux from "non-target" sources
+fff = 0.2 #fraction of flux that survives foreground filtering
 
 cosmo = FlatLambdaCDM(H0 = h*100, Om0 = 0.3089)
 
 def get_bandwidth(redshift):
-	## assumes TNG300 volume size by default
-	## returned in integer multiples of CHIME channel width
-	a = 1/(1 + redshift)
-	dLbase = cosmo.luminosity_distance(redshift).to(u.Mpc)
-	z = z_at_value(cosmo.luminosity_distance, dLbase+(a*205/h)*u.Mpc)
-	f = hi/(1 + redshift)
-	fnew = hi/(1 + z)
-	bw = abs(fnew - f)
-	return int(bw/freq_width)
+	# ## assumes TNG300 volume size by default
+	# ## returned in integer multiples of CHIME channel width
+	# a = 1/(1 + redshift)
+	# dLbase = cosmo.luminosity_distance(redshift).to(u.Mpc)
+	# z = z_at_value(cosmo.luminosity_distance, dLbase+(a*205/h)*u.Mpc)
+	# f = hi/(1 + redshift)
+	# fnew = hi/(1 + z)
+	# bw = abs(fnew - f)
+	# return int(bw/freq_width)
+	return 1 #uncomment rest of function for outer limit on CHIME bandwidth -- does not include foreground filtering effects
 
 def reverse(arr):
 	return 205000 - arr #in ckpc/h
@@ -49,16 +51,16 @@ def hi_flux(arr, mHIarr, redshift):
 
 def single_gauss_0(x, n):
     if z == 1:
-        sigma = 1.65
+        sigma = 1.62
     if z == 2:
-        sigma = 2.48
+        sigma = 2.41
     return n*np.exp(-0.5*((x - 32)/sigma)**2)
 
 def single_gauss_1(x, n):
     if z == 1:
-        sigma = 2.9
+        sigma = 2.73
     if z == 2:
-        sigma = 3.19
+        sigma = 3.08
     return n*np.exp(-0.5*((x - 34)/sigma)**2)
 
 
@@ -76,7 +78,7 @@ def return_mass(out_stack, img, cat, redshift, verbose = False, nrand = 'cat'):
 	dl = cosmo.luminosity_distance(redshift).to(u.Mpc).value
 	bandwidth = get_bandwidth(redshift)*freq_width
 
-	norm = fnt*normz
+	norm = fff*fnt*normz
 
 	if nrand == 'cat':
 		nrand = len(cat['EW'])
@@ -458,7 +460,8 @@ def convolve_beam(img, beam, add_noise = True, sig = 0.6e-3, verbose = True):
 	if add_noise:
 		if verbose:
 			print('adding noise')
-		convolved_img = convolved_img + np.random.normal(loc = 0, scale = sig, size = convolved_img.shape)
+		convolved_img = fff*convolved_img + np.random.normal(loc = 0, scale = sig, size = convolved_img.shape)
+		# fff is the approximation of attenuation due to foreground filtering
 
 	return convolved_img
 
@@ -563,8 +566,8 @@ def nsamp_stack(img, cat, n, verbose = True, return_ind = False):
 ## The following code is all fairly quick to run.
 
 #load beam for convolution
-beam1 = np.load('synthbeam_z1.npy') #not included in repository
-beam2 = np.load('synthbeam_z2.npy') #not included in repository
+beam1 = np.load('synthbeam_z1.npy')
+beam2 = np.load('synthbeam_z2.npy')
 
 #load catalogs created in chime_mock_catalog.py
 cluster_z1 = pd.read_csv('../catalogs/prepermutation/cluster_z1.txt', sep = '\t', header = 0)
@@ -586,6 +589,9 @@ tileimg1, tilecat1 = tile([st1, st2, st3, st4, st5, st6, st7, st8], 1)
 np.save('full_map_z1.npy', tileimg1)
 full_conv1 = convolve_beam(tileimg1, beam1) #convolve tiled image with beam
 full_conv_pad1 = make_stack_map(full_conv1) #pad beam-convolved map to allow stacking to edges
+np.save('full_map_z1_conv.npy', full_conv1)
+np.save('full_map_z1_convpad.npy', full_conv_pad1)
+
 
 #stack full map on all galaxies with Mstar >= 1e10 Msun
 mstar = create_condition_cat(gal_z1, 'sub_mstar')
@@ -618,6 +624,8 @@ tileimg2, tilecat2 = tile([st1, st2, st3, st4, st5, st6, st7, st8], 2)
 np.save('full_map_z2.npy', tileimg2)
 full_conv2 = convolve_beam(tileimg2, beam2) #convolve tiled image with beam
 full_conv_pad2 = make_stack_map(full_conv2) #pad beam-convolved map to allow stacking to edges
+np.save('full_map_z2_conv.npy', full_conv2)
+np.save('full_map_z2_convpad.npy', full_conv_pad2)
 
 #stack full map on all galaxies with Mstar >= 1e10 Msun
 mstar = create_condition_cat(gal_z2, 'sub_mstar')
@@ -771,6 +779,8 @@ tileimg1_ms, mscat1 = tile([st1, st2, st3, st4, st5, st6, st7, st8], 1)
 np.save('mscluster_map_z1.npy', tileimg1_ms)
 ms_conv1 = convolve_beam(tileimg1_ms, beam1) #convolve tiled image with beam
 ms_conv_pad1 = make_stack_map(ms_conv1) #pad beam-convolved map to allow stacking to edges
+np.save('mscluster_map_z1_conv.npy', ms_conv1)
+np.save('mscluster_map_z1_convpad.npy', ms_conv_pad1)
 
 #stack mass-selected cluster map on mass-selected clusters, z = 1
 ms_stack_z1 = stack(ms_conv_pad1, msclustercat1, verbose = False)
@@ -795,6 +805,8 @@ tileimg1_rs, rscat1 = tile([st1, st2, st3, st4, st5, st6, st7, st8], 1)
 np.save('rscluster_map_z1.npy', tileimg1_rs)
 rs_conv1 = convolve_beam(tileimg1_rs, beam1) #convolve tiled image with beam
 rs_conv_pad1 = make_stack_map(rs_conv1) #pad beam-convolved map to allow stacking to edges
+np.save('rscluster_map_z1_conv.npy', rs_conv1)
+np.save('rscluster_map_z1_convpad.npy', rs_conv_pad1)
 
 #stack radius-selected cluster map on radius-selected clusters, z = 1
 rs_stack_z1 = stack(rs_conv_pad1, rsclustercat1, verbose = False)
@@ -819,6 +831,8 @@ tileimg2_ms, mscat2 = tile([st1, st2, st3, st4, st5, st6, st7, st8], 2)
 np.save('mscluster_map_z2.npy', tileimg2_ms)
 ms_conv2 = convolve_beam(tileimg2_ms, beam2) #convolve tiled image with beam
 ms_conv_pad2 = make_stack_map(ms_conv2) #pad beam-convolved map to allow stacking to edges
+np.save('mscluster_map_z2_conv.npy', ms_conv2)
+np.save('mscluster_map_z2_convpad.npy', ms_conv_pad2)
 
 #stack mass-selected cluster map on mass-selected clusters, z = 2
 ms_stack_z2 = stack(ms_conv_pad2, msclustercat2, verbose = False)
@@ -843,6 +857,8 @@ tileimg2_rs, rscat2 = tile([st1, st2, st3, st4, st5, st6, st7, st8], 2)
 np.save('rscluster_map_z2.npy', tileimg2_rs)
 rs_conv2 = convolve_beam(tileimg2_rs, beam2) #convolve tiled image with beam
 rs_conv_pad2 = make_stack_map(rs_conv2) #pad beam-convolved map to allow stacking to edges
+np.save('rscluster_map_z2_conv.npy', rs_conv2)
+np.save('rscluster_map_z2_convpad.npy', rs_conv_pad2)
 
 #stack radius-selected cluster map on radius-selected clusters, z = 2
 rs_stack_z2 = stack(rs_conv_pad2, rsclustercat2, verbose = False)
