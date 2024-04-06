@@ -20,7 +20,7 @@ matplotlib.rcParams['ytick.major.size'] = 7
 matplotlib.rcParams['ytick.major.width'] = 3
 
 albumpl.set_default('RhumbLine')
-ccycle = return_colors('RhumbLine')
+ccycle = albumpl.palette.return_colors('RhumbLine')
 
 #not including code for Figure 2 here, since 1D beam models are not being shared
 #also not including Figure A1 which is a schematic produced with Keynote
