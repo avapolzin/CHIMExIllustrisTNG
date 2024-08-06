@@ -1,5 +1,5 @@
 # CHIMExIllustrisTNG
-[![arXiv](https://img.shields.io/badge/arXiv-2404.01382-b31b1b)](https://arxiv.org/abs/2404.01382)
+[![arXiv](https://img.shields.io/badge/arXiv-2404.01382-b31b1b)](https://arxiv.org/abs/2404.01382) [![DOI](https://zenodo.org/badge/529001838.svg)](https://zenodo.org/doi/10.5281/zenodo.13237232)
 
 Intended to store code and mock catalogs and intensity maps related to [Polzin et al. in press](https://arxiv.org/abs/2404.01382).
 
