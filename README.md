@@ -1,7 +1,7 @@
 # CHIMExIllustrisTNG
 [![arXiv](https://img.shields.io/badge/arXiv-2404.01382-b31b1b)](https://arxiv.org/abs/2404.01382)
 
-Intended to store code and mock catalogs and intensity maps related to Polzin et al. submitted.
+Intended to store code and mock catalogs and intensity maps related to [Polzin et al. in press](https://arxiv.org/abs/2404.01382).
 
 There are 3 (pre-beam convolution, beam-convolved, and beam-convolved + padded) intensity maps at each of z = 1 and 2 in the maps directory of this repository:
 1. all galaxies (field galaxies and cluster galaxies)
